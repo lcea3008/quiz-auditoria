@@ -1,7 +1,5 @@
 // quiz-engine.js — motor principal del quiz
 
-const API_URL = 'https://api.anthropic.com/v1/messages';
-const MODEL = 'claude-sonnet-4-20250514';
 
 // Estado global
 let state = {
@@ -57,49 +55,22 @@ async function evalAnswer() {
     return;
   }
 
-  // Desarrollo / Caso: evaluar con IA
+  // Desarrollo / Caso: evaluación local por palabras clave
   const text = (userAns || '').trim();
   if (!text) { showAlert('Escribe tu respuesta antes de evaluar.'); return; }
 
-  state.loading = true;
-  renderQuestion();
+  const sim = q.reference ? similarity(text, q.reference) : 0;
+  const score = sim >= 60 ? 10 : sim >= 40 ? 8 : sim >= 25 ? 6 : sim >= 15 ? 4 : 2;
 
-  // Similitud con respuesta de referencia (si existe)
-  let simScore = q.reference ? similarity(text, q.reference) : null;
+  const feedback = sim >= 60
+    ? `✓ Excelente. Tu respuesta cubre los conceptos clave del principio "${q.principle || q.topic}".`
+    : sim >= 40
+      ? `Parcialmente correcto. Revisa mejor el principio "${q.principle || q.topic}". Respuesta esperada: ${q.reference}`
+      : sim >= 25
+        ? `Incompleto. Faltan conceptos clave sobre "${q.principle || q.topic}". Respuesta esperada: ${q.reference}`
+        : `Muy incompleto. Respuesta esperada: ${q.reference}`;
 
-  const systemPrompt = `Eres evaluador del curso "Deontología del Auditor Informático" de la UTP, Sesión ${state.weekId}. Evalúa la respuesta del estudiante de forma estricta pero constructiva. Responde SOLO con JSON sin markdown, exactamente así: {"score": número 0-10, "similarity": número 0-100 que indica qué tan completa y cercana está la respuesta al concepto correcto, "feedback": "2-3 oraciones en español: qué acertó, qué faltó mencionar, qué concepto clave debió incluir"}`;
-
-  const userMsg = `Principio/Tema: ${q.principle || q.topic || ''}\nPregunta: ${q.question}\n${q.reference ? 'Respuesta de referencia: ' + q.reference + '\n' : ''}Respuesta del estudiante: ${text}`;
-
-  try {
-    const resp = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': '__ANTHROPIC_KEY__',
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-ipc': 'true'
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userMsg }]
-      })
-    });
-    const data = await resp.json();
-    const raw = data.content.map(b => b.text || '').join('');
-    const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
-    state.evaluated[state.current] = {
-      score: parsed.score,
-      similarity: simScore !== null ? Math.round((simScore + parsed.similarity) / 2) : parsed.similarity,
-      feedback: parsed.feedback
-    };
-  } catch (e) {
-    state.evaluated[state.current] = { score: 0, similarity: 0, feedback: 'Error al evaluar. Intenta nuevamente.' };
-  }
-
-  state.loading = false;
+  state.evaluated[state.current] = { score, similarity: sim, feedback };
   renderQuestion();
   updateDotNav();
 }
