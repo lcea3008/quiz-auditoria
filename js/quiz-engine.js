@@ -116,13 +116,19 @@ function renderQuestion() {
       oninput="state.answers[state.current]=this.value">${state.answers[state.current] || ''}</textarea>`;
   }
 
-  // Eval result
+  /// Eval result
   let evalHtml = '';
   if (ev) {
     const cls = ev.score >= 8 ? 'eval-ok' : ev.score >= 5 ? 'eval-warn' : 'eval-err';
     const icon = ev.score >= 8 ? '✓' : ev.score >= 5 ? '△' : '✗';
     const simText = ev.similarity !== null && ev.similarity !== undefined
       ? `<span class="eval-pct">${ev.similarity}% de similitud</span>` : '';
+    // Respuesta modelo (mejora 3)
+    const refHtml = q.reference ? `
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08)">
+        <div style="font-size:0.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">📖 Respuesta modelo</div>
+        <div style="font-size:0.85rem;color:var(--text2);line-height:1.65">${q.reference}</div>
+      </div>` : '';
     evalHtml = `
       <div class="eval-box ${cls}">
         <div class="eval-header">
@@ -130,6 +136,7 @@ function renderQuestion() {
           ${simText}
         </div>
         <div class="eval-text">${ev.feedback}</div>
+        ${refHtml}
       </div>`;
   }
 
@@ -255,7 +262,8 @@ function renderScore() {
       </div>
 
       <div class="nav-row" style="justify-content:center">
-        <button class="btn" onclick="restartQuiz()">↺ Reiniciar quiz</button>
+        <button class="btn" onclick="restartQuiz()">↺ Reiniciar completo</button>
+        <button class="btn btn-primary" onclick="repasarFallidas()">🔁 Repasar preguntas fallidas</button>
         <a href="../index.html" class="btn btn-next">← Volver al inicio</a>
       </div>
     </div>`;
@@ -268,6 +276,132 @@ function restartQuiz() {
   state.loading = false;
   renderQuestion();
   updateDotNav();
+}
+
+// REPASAR PREGUNTAS FALLIDAS (mejora 5)
+function repasarFallidas() {
+  const fallidas = state.questions
+    .map((q, i) => ({ q, i, ev: state.evaluated[i] }))
+    .filter(({ ev }) => ev && ev.score < 6);
+
+  if (!fallidas.length) {
+    showAlert('¡No hay preguntas fallidas! Obtuviste 6 o más en todas.');
+    return;
+  }
+
+  // Mostrar resumen de errores antes de repasar
+  const container = document.getElementById('quiz-container');
+  document.getElementById('dot-nav').innerHTML = '';
+  document.getElementById('prog-fill').style.width = '0%';
+
+  let resumenHtml = fallidas.map(({ q, i, ev }) => {
+    const ref = q.reference || q.feedback || 'Sin respuesta de referencia disponible.';
+    return `
+      <div class="q-card" style="margin-bottom:1rem">
+        <div class="q-meta">
+          <span class="q-num">P${i + 1}</span>
+          <span class="tag tag-prin">${q.principle || q.topic || ''}</span>
+          <span style="font-size:0.75rem;color:var(--err);margin-left:auto">${ev.score}/10</span>
+        </div>
+        <div class="q-text" style="font-size:0.9rem">${q.question}</div>
+        <div style="margin-top:8px;padding:10px 14px;background:rgba(78,205,196,0.06);border:1px solid rgba(78,205,196,0.2);border-radius:var(--radius-sm)">
+          <div style="font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">📖 Respuesta correcta</div>
+          <div style="font-size:0.85rem;color:var(--text2);line-height:1.65">${ref}</div>
+        </div>
+        ${ev.feedback ? `<div style="margin-top:6px;font-size:0.8rem;color:var(--warn)">💬 ${ev.feedback}</div>` : ''}
+      </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div style="margin-bottom:1.5rem">
+      <div style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;margin-bottom:.3rem">
+        Resumen de preguntas fallidas
+      </div>
+      <div style="font-size:0.85rem;color:var(--text2);margin-bottom:1.5rem">
+        ${fallidas.length} pregunta${fallidas.length > 1 ? 's' : ''} con puntaje menor a 6 — léelas bien antes de volver a practicar.
+      </div>
+      ${resumenHtml}
+    </div>
+    <div class="nav-row" style="justify-content:center">
+      <button class="btn btn-primary" onclick="iniciarRepaso()">🔁 Practicar estas ${fallidas.length} preguntas</button>
+      <button class="btn" onclick="restartQuiz()">↺ Reiniciar quiz completo</button>
+      <a href="../index.html" class="btn btn-next">← Inicio</a>
+    </div>`;
+
+  // Guardar preguntas fallidas para practicarlas
+  state._fallidas = fallidas.map(({ q }) => q);
+}
+
+function iniciarRepaso() {
+  initQuiz(state._fallidas, state.weekId);
+}
+
+// FLASHCARDS (mejora 2)
+function mostrarFlashcards() {
+  const container = document.getElementById('quiz-container');
+  document.getElementById('dot-nav').innerHTML = '';
+
+  let fcIndex = state.questions
+    .filter((q, i) => i <= state.current && q.reference)
+    .length - 1;
+  if (fcIndex < 0) fcIndex = 0;
+  const cards = state.questions
+    .filter(q => q.reference)
+    .map(q => ({ front: q.question, back: q.reference, principle: q.principle || q.topic || '' }));
+
+  if (!cards.length) { showAlert('No hay flashcards disponibles.'); return; }
+
+  function renderFC() {
+    const c = cards[fcIndex];
+    container.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        <span style="font-size:0.8rem;color:var(--text3)">Flashcard ${fcIndex + 1} de ${cards.length}</span>
+        <button onclick="cerrarFlashcards()" style="background:none;border:1px solid var(--border2);color:var(--text3);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;" title="Cerrar flashcards">✕</button>
+      </div>
+      <div class="q-card" id="fc-card" style="cursor:pointer;text-align:center;min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem" onclick="flipCard()">
+        <span class="tag tag-prin">${c.principle}</span>
+        <div id="fc-front" style="font-size:1rem;line-height:1.6;color:var(--text)">${c.front}</div>
+        <div id="fc-back" style="display:none;font-size:0.88rem;line-height:1.65;color:var(--accent2);border-top:1px solid rgba(255,255,255,0.08);padding-top:1rem;width:100%">${c.back}</div>
+        <div id="fc-hint" style="font-size:0.75rem;color:var(--text3)">👆 Toca para ver la respuesta</div>
+      </div>
+      <div class="nav-row" style="margin-top:1rem">
+        ${fcIndex > 0 ? `<button class="btn" onclick="fcNav(-1)">← Anterior</button>` : ''}
+        <button class="btn btn-primary" onclick="fcNav(1)">${fcIndex < cards.length - 1 ? 'Siguiente →' : 'Ir al quiz →'}</button>
+      </div>`;
+
+    window._fcCards = cards;
+    window._fcIndex = fcIndex;
+  }
+
+  window.flipCard = function () {
+    const back = document.getElementById('fc-back');
+    const hint = document.getElementById('fc-hint');
+    if (back.style.display === 'none') {
+      back.style.display = 'block';
+      hint.textContent = '👆 Toca para ocultar';
+    } else {
+      back.style.display = 'none';
+      hint.textContent = '👆 Toca para ver la respuesta';
+    }
+  };
+
+  window.fcNav = function (dir) {
+    fcIndex += dir;
+    if (fcIndex >= cards.length) {
+      renderQuestion();
+      updateDotNav();
+      return;
+    }
+    if (fcIndex < 0) fcIndex = 0;
+    renderFC();
+  };
+
+  renderFC();
+  window.cerrarFlashcards = function () {
+    renderQuestion();
+    updateDotNav();
+  };
+
 }
 
 function showAlert(msg) {
