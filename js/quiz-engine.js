@@ -85,21 +85,88 @@ function setupKeyboardNav() {
   });
 }
 
-// Calcular similitud (Mejora: Manejo de Stop Words y Siglas IT)
-function similarity(a, b) {
-  if (!a || !b) return 0;
-  // Stop words en español
-  const stopWords = new Set(['el','la','los','las','un','una','unos','unas','y','o','de','del','al','para','por','con','en','a','que','se','es','lo','su','sus','tu','te','como','más','pero']);
+// Distancia de Levenshtein (calcula errores tipográficos)
+function getEditDistance(a, b) {
+  if (!a || !b) return (a || b || '').length;
+  const matrix = Array(b.length + 1).fill(null).map(() => Array(a.length + 1).fill(null));
+  for (let i = 0; i <= b.length; i++) matrix[i][0] = i;
+  for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b[i - 1] === a[j - 1]) matrix[i][j] = matrix[i - 1][j - 1];
+      else matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1));
+    }
+  }
+  return matrix[b.length][a.length];
+}
+
+// Diccionario de Sinónimos TI / Auditoría
+const SYNONYMS = {
+  'software': ['programa', 'aplicacion', 'aplicativo', 'sistema', 'app'],
+  'auditor': ['evaluador', 'revisor', 'inspector'],
+  'auditoria': ['evaluacion', 'revision', 'inspeccion', 'analisis'],
+  'informacion': ['datos', 'data'],
+  'riesgo': ['peligro', 'vulnerabilidad', 'amenaza'],
+  'empresa': ['organizacion', 'entidad', 'compania', 'negocio', 'institucion'],
+  'norma': ['ley', 'regla', 'regulacion', 'estandar', 'framework'],
+  'proteger': ['salvaguardar', 'cuidar', 'asegurar', 'defender']
+};
+
+function expandWithSynonyms(word) {
+  let expanded = [word];
+  for (const [key, values] of Object.entries(SYNONYMS)) {
+    if (key === word || values.includes(word)) expanded.push(key, ...values);
+  }
+  return expanded;
+}
+
+// Calcular similitud (Tolerancia a errores, sinónimos y cobertura)
+function similarity(userText, refText) {
+  if (!userText || !refText) return 0;
   
-  const normalize = s => s.toLowerCase().replace(/[^a-záéíóúñü\s]/g, '').split(/\s+/)
-    .filter(w => w.length > 0 && !stopWords.has(w)); // Ya no elimina siglas como TI, BD, API
+  const stopWords = new Set(['el','la','los','las','un','una','unos','unas','y','o','de','del','al','para','por','con','en','a','que','se','es','lo','su','sus','tu','te','como','más','pero','no','si','suya','suyos']);
+  
+  // Normalizar quitando tildes y dejando solo alfanuméricos
+  const normalize = s => s.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s]/g, '')
+    .split(/\s+/)
+    .filter(w => w.length > 0 && !stopWords.has(w));
     
-  const setA = new Set(normalize(a));
-  const setB = new Set(normalize(b));
-  if (!setA.size || !setB.size) return 0;
-  const inter = [...setA].filter(w => setB.has(w)).length;
-  const union = new Set([...setA, ...setB]).size;
-  return Math.round((inter / union) * 100);
+  const userWords = normalize(userText);
+  const refWords = [...new Set(normalize(refText))];
+  
+  if (refWords.length === 0) return 0;
+
+  let matchedConcepts = 0;
+
+  for (let refWord of refWords) {
+    let isMatch = false;
+    let expandedRef = expandWithSynonyms(refWord);
+
+    for (let uWord of userWords) {
+      for (let eRef of expandedRef) {
+        // Tolerancia a typos (1 o 2 letras mal según tamaño)
+        let dist = getEditDistance(uWord, eRef);
+        let tolerance = eRef.length <= 4 ? 0 : (eRef.length <= 7 ? 1 : 2);
+        
+        // Coincidencia de raíz (Stemming básico): implementa vs implementar
+        let isRootMatch = eRef.length > 4 && (uWord.startsWith(eRef.substring(0, eRef.length-2)) || eRef.startsWith(uWord.substring(0, uWord.length-2)));
+
+        if (dist <= tolerance || isRootMatch) {
+          isMatch = true;
+          break;
+        }
+      }
+      if (isMatch) break;
+    }
+    if (isMatch) matchedConcepts++;
+  }
+
+  // En lugar de penalizar por usar palabras extra, medimos la cobertura de la respuesta ideal.
+  // Multiplicador x1.4 para ser indulgente: si acierta el ~70% de las palabras clave, saca 100%.
+  let coverage = (matchedConcepts / refWords.length) * 1.4;
+  return Math.round(Math.min(1.0, coverage) * 100);
 }
 
 // Evaluar respuesta
