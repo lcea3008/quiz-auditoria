@@ -11,22 +11,89 @@ let state = {
   weekId: ''
 };
 
+// Guardar estado local
+function saveState() {
+  if (!state.weekId) return;
+  localStorage.setItem(`quiz-state-${state.weekId}`, JSON.stringify({
+    current: state.current,
+    answers: state.answers,
+    evaluated: state.evaluated
+  }));
+}
+
 // Inicializar quiz con array de preguntas
 function initQuiz(questions, weekId) {
   state.questions = questions;
-  state.current = 0;
-  state.answers = new Array(questions.length).fill(null);
-  state.evaluated = new Array(questions.length).fill(null);
   state.loading = false;
   state.weekId = weekId;
+  
+  // Autoguardado: Intentar cargar la sesión
+  const saved = localStorage.getItem(`quiz-state-${weekId}`);
+  if (saved && !window._repasoMode) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (confirm('Tienes una sesión anterior guardada. ¿Deseas continuar donde lo dejaste?')) {
+        state.current = parsed.current || 0;
+        state.answers = parsed.answers || new Array(questions.length).fill(null);
+        state.evaluated = parsed.evaluated || new Array(questions.length).fill(null);
+      } else {
+        localStorage.removeItem(`quiz-state-${weekId}`);
+        state.current = 0;
+        state.answers = new Array(questions.length).fill(null);
+        state.evaluated = new Array(questions.length).fill(null);
+      }
+    } catch (e) {
+      state.current = 0;
+      state.answers = new Array(questions.length).fill(null);
+      state.evaluated = new Array(questions.length).fill(null);
+    }
+  } else {
+    state.current = 0;
+    state.answers = new Array(questions.length).fill(null);
+    state.evaluated = new Array(questions.length).fill(null);
+  }
+
+  setupKeyboardNav();
   renderQuestion();
   updateDotNav();
 }
 
-// Calcular similitud simple entre dos strings (Jaccard sobre palabras)
+// Configurar Atajos de Teclado
+function setupKeyboardNav() {
+  if (window._kbdSetup) return;
+  window._kbdSetup = true;
+  document.addEventListener('keydown', (e) => {
+    // Si el usuario está escribiendo en el textarea de un caso, ignorar atajos (excepto flechas/enter modificados)
+    if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+    
+    if (document.getElementById('fc-card')) { // Si está en modo flashcards
+      if (e.key === 'ArrowRight') window.fcNav(1);
+      if (e.key === 'ArrowLeft') window.fcNav(-1);
+      if (e.key === 'Enter' || e.key === ' ') window.flipCard();
+      return;
+    }
+
+    if (e.key === 'ArrowRight') navigate(1);
+    if (e.key === 'ArrowLeft') navigate(-1);
+    if (e.key === 'Enter') evalAnswer();
+    
+    const q = state.questions[state.current];
+    if (q && q.type === 'vf') {
+      if (e.key.toLowerCase() === 'v') selectVF(true);
+      if (e.key.toLowerCase() === 'f') selectVF(false);
+    }
+  });
+}
+
+// Calcular similitud (Mejora: Manejo de Stop Words y Siglas IT)
 function similarity(a, b) {
   if (!a || !b) return 0;
-  const normalize = s => s.toLowerCase().replace(/[^a-záéíóúñü\s]/g, '').split(/\s+/).filter(w => w.length > 3);
+  // Stop words en español
+  const stopWords = new Set(['el','la','los','las','un','una','unos','unas','y','o','de','del','al','para','por','con','en','a','que','se','es','lo','su','sus','tu','te','como','más','pero']);
+  
+  const normalize = s => s.toLowerCase().replace(/[^a-záéíóúñü\s]/g, '').split(/\s+/)
+    .filter(w => w.length > 0 && !stopWords.has(w)); // Ya no elimina siglas como TI, BD, API
+    
   const setA = new Set(normalize(a));
   const setB = new Set(normalize(b));
   if (!setA.size || !setB.size) return 0;
@@ -50,6 +117,29 @@ async function evalAnswer() {
       similarity: correct ? 100 : 0,
       feedback: q.feedback  // <-- siempre muestra el feedback, correcto o no
     };
+    renderQuestion();
+    updateDotNav();
+    return;
+  }
+
+
+  // Completar: comparar cada campo con la respuesta correcta
+  if (q.type === 'completar') {
+    const userFields = state.answers[state.current] || [];
+    const correctFields = q.answer;
+    let aciertos = 0;
+    const resultados = correctFields.map((correct, i) => {
+      const user = (userFields[i] || '').trim().toLowerCase();
+      const ok = correct.toLowerCase().split('|').some(opt => user.includes(opt.trim()));
+      if (ok) aciertos++;
+      return { user: userFields[i] || '(vacío)', correct, ok };
+    });
+    const score = Math.round((aciertos / correctFields.length) * 10);
+    const sim = Math.round((aciertos / correctFields.length) * 100);
+    const detalles = resultados.map((r, i) =>
+      `${r.ok ? '✓' : '✗'} Espacio ${i + 1}: escribiste "<em>${r.user}</em>" → correcto: "<strong>${r.correct.split('|')[0]}</strong>"`
+    ).join('<br>');
+    state.evaluated[state.current] = { score, similarity: sim, feedback: detalles };
     renderQuestion();
     updateDotNav();
     return;
@@ -97,8 +187,8 @@ function renderQuestion() {
   document.getElementById('prog-prin').textContent = q.principle || q.topic || '';
 
   // Tipo badge
-  const tagClass = q.type === 'vf' ? 'tag-vf' : q.type === 'caso' ? 'tag-caso' : 'tag-dev';
-  const tagText = q.type === 'vf' ? 'V / F' : q.type === 'caso' ? 'Caso práctico' : 'Desarrollo';
+  const tagClass = q.type === 'vf' ? 'tag-vf' : q.type === 'caso' ? 'tag-caso' : q.type === 'completar' ? 'tag-vf' : 'tag-dev';
+  const tagText = q.type === 'vf' ? 'V / F' : q.type === 'caso' ? 'Caso práctico' : q.type === 'completar' ? 'Completar' : 'Desarrollo';
 
   // Input
   let inputHtml = '';
@@ -110,6 +200,20 @@ function renderQuestion() {
         <button class="vf-btn ${sv}" onclick="selectVF(true)">✓ Verdadero</button>
         <button class="vf-btn ${sf}" onclick="selectVF(false)">✗ Falso</button>
       </div>`;
+  } else if (q.type === 'completar') {
+    const parts = q.question.split('___');
+    inputHtml = `<div style="font-size:1rem;line-height:2;color:var(--text)">`;
+    parts.forEach((part, i) => {
+      inputHtml += part;
+      if (i < parts.length - 1) {
+        inputHtml += `<input type="text" id="comp-${i}"
+          style="background:var(--surface2);border:none;border-bottom:2px solid var(--accent);color:var(--accent2);font-size:1rem;font-family:'DM Sans',sans-serif;padding:2px 8px;width:160px;outline:none;margin:0 4px;"
+          placeholder="______"
+          oninput="guardarCompletar()"
+          value="${(state.answers[state.current] || [])[i] || ''}">`;
+      }
+    });
+    inputHtml += `</div>`;
   } else {
     inputHtml = `<textarea class="ans-textarea" id="ta-main"
       placeholder="Escribe tu respuesta aquí..."
@@ -166,6 +270,7 @@ function renderQuestion() {
 
 function selectVF(val) {
   state.answers[state.current] = val;
+  saveState();
   renderQuestion();
 }
 
@@ -173,6 +278,7 @@ function navigate(dir) {
   state.current += dir;
   if (state.current >= state.questions.length) { renderScore(); return; }
   if (state.current < 0) state.current = 0;
+  saveState();
   renderQuestion();
   updateDotNav();
 }
@@ -270,12 +376,16 @@ function renderScore() {
 }
 
 function restartQuiz() {
-  state.current = 0;
-  state.answers = new Array(state.questions.length).fill(null);
-  state.evaluated = new Array(state.questions.length).fill(null);
-  state.loading = false;
-  renderQuestion();
-  updateDotNav();
+  if (confirm('¿Estás seguro de que deseas reiniciar todo el cuestionario y empezar de cero?')) {
+    localStorage.removeItem(`quiz-state-${state.weekId}`);
+    window._repasoMode = false;
+    state.current = 0;
+    state.answers = new Array(state.questions.length).fill(null);
+    state.evaluated = new Array(state.questions.length).fill(null);
+    state.loading = false;
+    renderQuestion();
+    updateDotNav();
+  }
 }
 
 // REPASAR PREGUNTAS FALLIDAS (mejora 5)
@@ -288,6 +398,8 @@ function repasarFallidas() {
     showAlert('¡No hay preguntas fallidas! Obtuviste 6 o más en todas.');
     return;
   }
+
+  window._repasoMode = true;
 
   // Mostrar resumen de errores antes de repasar
   const container = document.getElementById('quiz-container');
@@ -358,13 +470,24 @@ function mostrarFlashcards() {
         <span style="font-size:0.8rem;color:var(--text3)">Flashcard ${fcIndex + 1} de ${cards.length}</span>
         <button onclick="cerrarFlashcards()" style="background:none;border:1px solid var(--border2);color:var(--text3);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;" title="Cerrar flashcards">✕</button>
       </div>
-      <div class="q-card" id="fc-card" style="cursor:pointer;text-align:center;min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem" onclick="flipCard()">
-        <span class="tag tag-prin">${c.principle}</span>
-        <div id="fc-front" style="font-size:1rem;line-height:1.6;color:var(--text)">${c.front}</div>
-        <div id="fc-back" style="display:none;font-size:0.88rem;line-height:1.65;color:var(--accent2);border-top:1px solid rgba(255,255,255,0.08);padding-top:1rem;width:100%">${c.back}</div>
-        <div id="fc-hint" style="font-size:0.75rem;color:var(--text3)">👆 Toca para ver la respuesta</div>
+      
+      <div class="fc-scene">
+        <div class="fc-card" id="fc-card" onclick="flipCard()">
+          <!-- Lado Frontal (pregunta) -->
+          <div class="fc-face fc-front">
+            <span class="tag tag-prin" style="margin-bottom:1rem">${c.principle}</span>
+            <div style="font-size:1.05rem;line-height:1.6;color:var(--text);text-align:center">${c.front}</div>
+            <div style="font-size:0.75rem;color:var(--text3);margin-top:1.5rem">👆 Toca o presiona Espacio/Enter para girar</div>
+          </div>
+          <!-- Lado Trasero (respuesta) -->
+          <div class="fc-face fc-back">
+            <span class="tag tag-prin" style="margin-bottom:1rem">Respuesta</span>
+            <div style="font-size:0.9rem;line-height:1.65;color:var(--accent2);text-align:center">${c.back}</div>
+          </div>
+        </div>
       </div>
-      <div class="nav-row" style="margin-top:1rem">
+
+      <div class="nav-row" style="margin-top:1.5rem">
         ${fcIndex > 0 ? `<button class="btn" onclick="fcNav(-1)">← Anterior</button>` : ''}
         <button class="btn btn-primary" onclick="fcNav(1)">${fcIndex < cards.length - 1 ? 'Siguiente →' : 'Ir al quiz →'}</button>
       </div>`;
@@ -374,14 +497,9 @@ function mostrarFlashcards() {
   }
 
   window.flipCard = function () {
-    const back = document.getElementById('fc-back');
-    const hint = document.getElementById('fc-hint');
-    if (back.style.display === 'none') {
-      back.style.display = 'block';
-      hint.textContent = '👆 Toca para ocultar';
-    } else {
-      back.style.display = 'none';
-      hint.textContent = '👆 Toca para ver la respuesta';
+    const card = document.getElementById('fc-card');
+    if (card) {
+      card.classList.toggle('is-flipped');
     }
   };
 
@@ -402,6 +520,10 @@ function mostrarFlashcards() {
     updateDotNav();
   };
 
+}
+function guardarCompletar() {
+  const inputs = document.querySelectorAll('[id^="comp-"]');
+  state.answers[state.current] = Array.from(inputs).map(inp => inp.value);
 }
 
 function showAlert(msg) {
