@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador de Examen (Aleatorio) | Quiz Auditor�a</title>
+  <link rel="stylesheet" href="../css/styles.css?v=2.0">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container">
+      <div class="header-inner">
+        <div class="logo">
+          <div class="logo-dot"></div>
+          Quiz Auditor�a
+        </div>
+        <nav class="breadcrumb">
+          <a href="../index.html">Inicio</a>
+          <span>�</span>
+          <span>Simulador Aleatorio</span>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="quiz-header">
+      <a href="../index.html" class="back-link">? Volver al inicio</a>
+      <div class="quiz-title">Simulador de Examen Global</div>
+      <div class="quiz-sub" id="q-sub-text">Cargando preguntas de todas las semanas...</div>
+      <button class="btn" style="margin-top:1rem" onclick="mostrarFlashcards()">?? Modo Flashcards (Revueltas)</button>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-track">
+        <div class="progress-fill" id="prog-fill" style="width:0%"></div>
+      </div>
+      <div class="progress-meta">
+        <span>Pregunta <strong id="prog-cur">1</strong> de <strong id="prog-tot">-</strong></span>
+        <span id="prog-prin" style="color:var(--accent);font-weight:500"></span>
+      </div>
+    </div>
+
+    <div class="dot-nav" id="dot-nav"></div>
+
+    <div id="quiz-container">
+      <div style="color:var(--text3);padding:2rem 0;text-align:center;font-size:.9rem">Cargando modo mixto...</div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      Simulador Aleatorio Global � UTP
+    </div>
+  </footer>
+
+  <!-- Cargar Todos los Datos Disponibles -->
+  <script src="semana5-data.js"></script>
+  <script src="semana6-data.js"></script>
+  <script src="semana7-data.js"></script>
+  <script src="semana8-data.js"></script>
+  <script src="semana9-data.js"></script>
+  <script src="semana10-data.js"></script>
+  
+  <script src="../js/quiz-engine.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Recolectar todas las preguntas que existan en los scripts cargados (excluyendo lecturas)
+      let todas = [];
+      try { if (typeof SEMANA5_QUESTIONS !== 'undefined') todas.push(...SEMANA5_QUESTIONS); } catch(e){}
+      try { if (typeof SEMANA6_QUESTIONS !== 'undefined') todas.push(...SEMANA6_QUESTIONS); } catch(e){}
+      try { if (typeof SEMANA7_QUESTIONS !== 'undefined') todas.push(...SEMANA7_QUESTIONS); } catch(e){}
+      try { if (typeof SEMANA8_QUESTIONS !== 'undefined') todas.push(...SEMANA8_QUESTIONS); } catch(e){}
+      try { if (typeof SEMANA9_QUESTIONS !== 'undefined') todas.push(...SEMANA9_QUESTIONS); } catch(e){}
+      try { if (typeof SEMANA10_QUESTIONS !== 'undefined') todas.push(...SEMANA10_QUESTIONS); } catch(e){}
+
+      if(todas.length === 0) {
+        document.getElementById('quiz-container').innerHTML = '<div style="color:red;padding:2rem">Error: No se encontraron bancos de preguntas.</div>';
+        return;
+      }
+
+      // Mezclar preguntas aleatoriamente (Algoritmo Fisher-Yates)
+      for (let i = todas.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [todas[i], todas[j]] = [todas[j], todas[i]];
+      }
+
+      // Limitar a un n�mero m�ximo si hay demasiadas (Opcional, por ej 40)
+      // todas = todas.slice(0, 40);
+
+      document.getElementById('q-sub-text').textContent = "Simulacro completo con " + todas.length + " preguntas en orden aleatorio.";
+      
+      // Iniciar el quiz con un ID especial para que el autoguardado lo trate aparte
+      initQuiz(todas, 'simulador-global-mixto');
+    });
+  </script>
+</body>
+</html>
