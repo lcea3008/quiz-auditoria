@@ -167,5 +167,85 @@ const SEMANA6_QUESTIONS = [
         answer: null,
         feedback: null,
         reference: 'CISA (Certified Information Systems Auditor): dirigida a auditores, valida experiencia en auditoría, seguridad y control de TI, impulsa carrera y salario. CISM (Certified Information Security Manager): orientada a alta dirección, visión estratégica en seguridad de la información, para gestores y directivos. CRISC (Risk and Information Systems Control): enfocada en gestión y control de riesgos de TI, para profesionales en implementación de controles de seguridad. Resumen: CISA=auditar sistemas, CISM=gestionar seguridad estratégicamente, CRISC=gestionar riesgos de TI.'
+    },
+    {
+        type: 'completar',
+        principle: 'ISACA — Historia',
+        question: 'ISACA tiene sus orígenes en ___, cuando auditores de sistemas identificaron la necesidad de unificar el enfoque metodológico. En ___ se formalizó como Asociación de Auditores de EDP.',
+        answer: ['1967', '1969'],
+        feedback: null,
+        reference: null
+    },
+    {
+        type: 'completar',
+        principle: 'ISACA — Historia',
+        question: 'La certificación ___ fue introducida por ISACA en ___, convirtiéndose en una de las más reconocidas en el campo de la auditoría de sistemas.',
+        answer: ['CISA', '1981'],
+        feedback: null,
+        reference: null
+    },
+    {
+        type: 'completar',
+        principle: 'Certificación CISA',
+        question: 'El examen CISA consta de ___ preguntas, dura ___ horas y su dominio de mayor peso es ___ con un 27%.',
+        answer: ['150', '4', 'Protección de los Activos de Información|Protección de Activos'],
+        feedback: null,
+        reference: null
+    },
+    {
+        type: 'completar',
+        principle: 'Certificación CISM',
+        question: 'El examen CISM cubre 4 dominios: Gobierno de la Seguridad de la Información (__%),  Gestión de Riesgos (__%), Programa de Seguridad de la Información (__%) y Tecnología y Seguridad (__%).',
+        answer: ['17', '20', '33', '30'],
+        feedback: null,
+        reference: null
+    },
+    {
+        type: 'completar',
+        principle: 'Certificación CRISC',
+        question: 'CRISC significa ___ y está dirigida a profesionales con experiencia en ___ de riesgos de TI.',
+        answer: ['Risk and Information Systems Control', 'gestión'],
+        feedback: null,
+        reference: null
+    },
+    {
+        type: 'completar',
+        principle: 'COBIT',
+        question: 'COBIT es un marco de ___ y ___ de TI desarrollado por ISACA que proporciona mejores prácticas para gestionar activos de información.',
+        answer: ['gobierno', 'gestión'],
+        feedback: null,
+        reference: null
+    },
+    {
+        type: 'completar',
+        principle: 'COBIT — Gobierno vs Gestión',
+        question: 'En COBIT, el ___ recae en la Junta Directiva bajo su Presidente, mientras que la ___ es responsabilidad del equipo ejecutivo liderado por el ___.',
+        answer: ['gobierno|Gobierno', 'gestión|Gestión', 'CEO'],
+        feedback: null,
+        reference: null
+    },
+    {
+        type: 'completar',
+        principle: 'COBIT — Examen',
+        question: 'El examen de Fundamentos COBIT 2019 dura ___ horas y consta de ___ preguntas, siendo más corto que el examen CISA.',
+        answer: ['2', '75'],
+        feedback: null,
+        reference: null
+    },
+    {
+        type: 'completar',
+        principle: '¿Por qué Certificarme?',
+        question: 'Las certificaciones ISACA se consideran entre las más ___ y bien ___ en TI, impulsando ingresos y mejorando la reputación profesional.',
+        answer: ['influyentes', 'remuneradas'],
+        feedback: null,
+        reference: null
+    },
+    {
+        type: 'completar',
+        principle: 'Principales Certificaciones ISACA',
+        question: 'La certificación ___ valida experiencia en gobernanza estratégica empresarial a nivel ejecutivo, mientras que ___ certifica habilidades en ciberseguridad avanzada.',
+        answer: ['CGEIT', 'CSX-P'],
+        feedback: null,
+        reference: null
     }
 ];

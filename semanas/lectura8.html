@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lectura Semana 8 — Auditoría de Seguridad | Quiz Auditoría</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+
+<body>
+
+    <header class="site-header">
+        <div class="container">
+            <div class="header-inner">
+                <div class="logo">
+                    <div class="logo-dot"></div>
+                    Quiz Auditoría
+                </div>
+                <nav class="breadcrumb">
+                    <a href="../index.html">Inicio</a>
+                    <span>›</span>
+                    <span>Lectura Semana 8</span>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="quiz-header">
+            <a href="../index.html" class="back-link">← Volver al inicio</a>
+            <div class="quiz-title">Lectura Semana 8 — Auditoría de Seguridad y Seguridad Física</div>
+            <div class="quiz-sub">20 preguntas · Preguntas más probables de examen · V/F, Desarrollo, Casos y Completar
+            </div>
+            <button class="btn" style="margin-top:1rem" onclick="mostrarFlashcards()">🃏 Modo Flashcards</button>
+        </div>
+
+        <div class="progress-wrap">
+            <div class="progress-track">
+                <div class="progress-fill" id="prog-fill" style="width:0%"></div>
+            </div>
+            <div class="progress-meta">
+                <span>Pregunta <strong id="prog-cur">1</strong> de <strong id="prog-tot">20</strong></span>
+                <span id="prog-prin" style="color:var(--accent);font-weight:500"></span>
+            </div>
+        </div>
+
+        <div class="dot-nav" id="dot-nav"></div>
+        <div id="quiz-container">
+            <div style="color:var(--text3);padding:2rem 0;text-align:center;font-size:.9rem">Cargando preguntas...</div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            Deontología del Auditor Informático · UTP · Lectura Semana 8
+        </div>
+    </footer>
+
+    <script src="../semanas/lectura8-data.js"></script>
+    <script src="../js/quiz-engine.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initQuiz(LECTURA8_QUESTIONS, LECTURA8_INFO.id);
+        });
+    </script>
+</body>
+
+</html>

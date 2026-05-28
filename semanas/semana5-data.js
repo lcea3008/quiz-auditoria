@@ -215,5 +215,85 @@ const SEMANA5_QUESTIONS = [
     answer: false,
     feedback: 'FALSO. Los principios éticos son reglas generales que orientan el comportamiento moral, pero su aplicación requiere juicio moral contextualizado. El auditor debe evaluar cada situación considerando el contexto específico (legal, cultural, empresarial), siempre dentro del marco deontológico. No existe una aplicación mecánica única para todos los casos.',
     reference: null
+  },
+  {
+    type: 'completar',
+    principle: 'Principios Deontológicos',
+    question: 'El Principio de ___ establece que el auditor debe actuar en beneficio de los intereses del ___ al proporcionar servicios de auditoría.',
+    answer: ['Beneficio del Auditado|Beneficio', 'cliente|auditado'],
+    feedback: null,
+    reference: null
+  },
+  {
+    type: 'completar',
+    principle: 'Principios Deontológicos',
+    question: 'El Principio de ___ indica que el auditor debe basar sus recomendaciones en su experiencia contrastada, evitando hacer predicciones excesivamente ___ sobre futuros avances tecnológicos.',
+    answer: ['Cautela', 'seguras'],
+    feedback: null,
+    reference: null
+  },
+  {
+    type: 'completar',
+    principle: 'Principios Deontológicos',
+    question: 'El Principio de ___ obliga al auditor a mantener en secreto la información obtenida durante la auditoría, tanto ___ como después de ella.',
+    answer: ['Secreto Profesional', 'durante'],
+    feedback: null,
+    reference: null
+  },
+  {
+    type: 'completar',
+    principle: 'Principios Deontológicos',
+    question: 'El Principio de ___ exige que el auditor sea imparcial, actúe objetivamente y evite depender de ___ en su trabajo.',
+    answer: ['Independencia', 'terceros'],
+    feedback: null,
+    reference: null
+  },
+  {
+    type: 'completar',
+    principle: 'Principios Deontológicos',
+    question: 'El Principio de ___ prohíbe al auditor el uso indebido de sus conocimientos y colaborar en violaciones de la ___, como desactivar medidas de seguridad.',
+    answer: ['Legalidad', 'legalidad|ley'],
+    feedback: null,
+    reference: null
+  },
+  {
+    type: 'completar',
+    principle: 'Principios Deontológicos',
+    question: 'El Principio de ___ establece que el auditor debe mantener su criterio independiente incluso ante la oposición de otros ___.',
+    answer: ['Criterio Propio', 'profesionales'],
+    feedback: null,
+    reference: null
+  },
+  {
+    type: 'completar',
+    principle: 'Normas Profesionales',
+    question: 'Las Normas Profesionales del Auditor incluyen 8 valores: Responsabilidad, Integridad, Honestidad, ___, Compromiso, ___, Equilibrio e Institucionalidad.',
+    answer: ['Objetividad', 'Confidencialidad'],
+    feedback: null,
+    reference: null
+  },
+  {
+    type: 'completar',
+    principle: 'Principios Deontológicos',
+    question: 'El Principio de ___ exige que el auditor lleve a cabo su labor sin ___ y sin prejuicios de ningún tipo, manteniendo igualdad de trato.',
+    answer: ['No Discriminación', 'discriminación'],
+    feedback: null,
+    reference: null
+  },
+  {
+    type: 'completar',
+    principle: 'Principios Deontológicos',
+    question: 'El Principio de ___ implica que el auditor debe mantener comunicaciones respaldadas por hechos, diferenciando entre ___ y opiniones.',
+    answer: ['Veracidad', 'hechos'],
+    feedback: null,
+    reference: null
+  },
+  {
+    type: 'completar',
+    principle: 'Principios Deontológicos',
+    question: 'El Principio de ___ implica que el auditor debe asumir la ___ de sus acciones, palabras y consejos como parte integral de su comportamiento profesional.',
+    answer: ['Responsabilidad', 'responsabilidad'],
+    feedback: null,
+    reference: null
   }
 ];

@@ -191,5 +191,85 @@ const SEMANA7_QUESTIONS = [
         answer: null,
         feedback: null,
         reference: 'Seguridad en Telecomunicaciones: protege la transmisión de datos a través de protocolos seguros, control de accesos y monitoreo, evitando interceptaciones o accesos no autorizados durante la comunicación. Seguridad en Redes: asegura la infraestructura de red mediante control de accesos, gestión de usuarios, protección de datos y respaldos, previniendo ataques o vulnerabilidades en la red en sí. La diferencia clave: telecomunicaciones se enfoca en el canal de transmisión, redes se enfoca en la infraestructura y gestión de usuarios de la red.'
+    },
+    {
+        type: 'completar',
+        principle: 'Controles de TI',
+        question: 'Los controles de TI aseguran la ___, ___ y ___ (CIA) de los sistemas y datos de TI.',
+        answer: ['confidencialidad|Confidencialidad', 'integridad|Integridad', 'disponibilidad|Disponibilidad'],
+        feedback: null,
+        reference: null
+    },
+    {
+        type: 'completar',
+        principle: 'Controles de TI',
+        question: 'Existen dos grandes tipos de controles de TI: los controles ___, que aplican a nivel organizativo a todos los sistemas, y los controles de ___, que aseguran que una aplicación específica cumpla sus objetivos.',
+        answer: ['Generales|generales', 'Aplicativos|aplicativos'],
+        feedback: null,
+        reference: null
+    },
+    {
+        type: 'completar',
+        principle: 'Controles Preventivos, Detectivos y Correctivos',
+        question: 'Los controles ___ evitan que ocurra un problema, los controles ___ identifican problemas cuando ocurren, y los controles ___ solucionan problemas después de un incidente.',
+        answer: ['preventivos|Preventivos', 'detectivos|Detectivos', 'correctivos|Correctivos'],
+        feedback: null,
+        reference: null
+    },
+    {
+        type: 'completar',
+        principle: 'Seguridad Física',
+        question: 'La seguridad ___ protege los activos tangibles como hardware e instalaciones, mientras que la seguridad ___ protege los activos intangibles como software y datos.',
+        answer: ['física|Física', 'lógica|Lógica'],
+        feedback: null,
+        reference: null
+    },
+    {
+        type: 'completar',
+        principle: 'Controles de Aplicativos',
+        question: 'Los 4 ejemplos clave de controles de aplicativos son: ___ de datos, ___ de funciones, ___ de datos y control de ___.',
+        answer: ['Validación|validación', 'Segregación|segregación', 'Respaldo|respaldo', 'Cambios|cambios'],
+        feedback: null,
+        reference: null
+    },
+    {
+        type: 'completar',
+        principle: 'Tipos de Malware',
+        question: 'El ___ cifra archivos y pide rescate, el ___ se replica por redes sin archivo huésped, y el ___ parece legítimo pero realiza acciones maliciosas en segundo plano.',
+        answer: ['ransomware|Ransomware', 'gusano|Gusano', 'troyano|Troyano'],
+        feedback: null,
+        reference: null
+    },
+    {
+        type: 'completar',
+        principle: 'Control de Acceso No Autorizado',
+        question: 'El ataque de ___ adivina contraseñas por repetición, el ___ engaña con correos falsos, y el ___ suplanta la identidad de un usuario o sistema.',
+        answer: ['Fuerza Bruta|fuerza bruta', 'Phishing|phishing', 'Spoofing|spoofing'],
+        feedback: null,
+        reference: null
+    },
+    {
+        type: 'completar',
+        principle: 'Prevención de Virus',
+        question: 'Un sistema puede infectarse con virus al usar ___ ajenos infectados, abrir archivos ___ de correos desconocidos o conectarse a páginas ___.',
+        answer: ['USB|usb', 'adjuntos', 'no seguras|inseguras'],
+        feedback: null,
+        reference: null
+    },
+    {
+        type: 'completar',
+        principle: 'Seguridad Lógica',
+        question: 'El control de acceso basado en ___ asigna permisos según la función del usuario. La ___ de red divide la infraestructura en zonas para prevenir la propagación de amenazas.',
+        answer: ['roles|Roles', 'segmentación|Segmentación'],
+        feedback: null,
+        reference: null
+    },
+    {
+        type: 'completar',
+        principle: 'Backup y Contingencia',
+        question: 'Los archivos pueden alterarse por errores de ___, fallas del ___, acontecimientos ___ o acciones humanas ___.',
+        answer: ['programación', 'hardware', 'naturales', 'intencionales'],
+        feedback: null,
+        reference: null
     }
 ];
